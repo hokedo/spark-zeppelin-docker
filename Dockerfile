@@ -1,7 +1,7 @@
-FROM ubuntu:18.10
+FROM ubuntu:20.04
 
-ARG ZEPPELIN_VERSION="0.8.1"
-ARG SPARK_VERSION="2.4.3"
+ARG ZEPPELIN_VERSION="0.8.2"
+ARG SPARK_VERSION="2.4.8"
 ARG HADOOP_VERSION="2.7"
 
 LABEL maintainer "mirkoprescha"
@@ -11,10 +11,11 @@ LABEL hadoop.version=${HADOOP_VERSION}
 
 # Install Java and some tools
 RUN apt-get -y update &&\
-    apt-get -y install curl less &&\
-    apt-get install -y openjdk-8-jdk &&\
-    apt-get -y install vim
-
+    apt-get -y install software-properties-common && \
+    add-apt-repository -y ppa:deadsnakes/ppa &&\
+    apt-get -y install curl python3.7 python3-pip openjdk-8-jdk && \
+    ln -s /usr/bin/python3.7 /usr/bin/python && \
+    pip install pyspark==${SPARK_VERSION}
 
 ##########################################
 # SPARK
@@ -50,12 +51,13 @@ RUN mkdir -p $ZEPPELIN_HOME \
   && mkdir -p $ZEPPELIN_HOME/logs \
   && mkdir -p $ZEPPELIN_HOME/run
 
-
+RUN cat $ZEPPELIN_CONF_DIR/zeppelin-site.xml.template | sed 's/127.0.0.1/0.0.0.0/g' > $ZEPPELIN_CONF_DIR/zeppelin-site.xml
 
 # my WorkDir
 RUN mkdir /work
 WORKDIR /work
 
 
-ENTRYPOINT  /usr/local/spark/sbin/start-history-server.sh; $ZEPPELIN_HOME/bin/zeppelin-daemon.sh start  && bash
+COPY ./entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
 

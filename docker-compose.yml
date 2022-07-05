@@ -1,0 +1,14 @@
+version: '3'
+services:
+  zeppelin:
+    build: .
+    container_name: zeppelin
+    ports:
+      - "18080:18080"
+      - "8080:8080"
+    volumes:
+      - zeppelin-notebooks:/usr/zeppelin/zeppelin-0.8.2-bin-all/notebook # persist data even if container shuts down
+      - .:/external
+
+volumes:
+  zeppelin-notebooks:
